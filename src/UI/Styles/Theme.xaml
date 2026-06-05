@@ -319,55 +319,9 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,5"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ComboBox">
-                    <Border x:Name="Root"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="28"/>
-                            </Grid.ColumnDefinitions>
-                            <ContentPresenter x:Name="ContentSite"
-                                              IsHitTestVisible="False"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="{TemplateBinding Padding}"
-                                              VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="▾"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       FontSize="10"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"/>
-                            <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   Placement="Bottom" AllowsTransparency="True">
-                                <Border Background="{DynamicResource SurfaceElevatedBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="6"
-                                        Margin="0,2,0,0"
-                                        Effect="{StaticResource CardShadow}">
-                                    <ScrollViewer MaxHeight="200">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsDropDownOpen" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="ItemContainerStyle">
             <Setter.Value>
                 <Style TargetType="ComboBoxItem">
