@@ -236,7 +236,7 @@ public class IisImportService : IIisImportService
                     try
                     {
                         _logger.Information("Importing site: {Name}", site.Name);
-                        ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies,
+                        await ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies,
                             sitePathOverrides, customNames, customPorts, importedPoolNameMap);
                         importedSites++;
                         createdSiteNames.Add(site.Name);
@@ -359,7 +359,7 @@ public class IisImportService : IIisImportService
         }
     }
 
-    private void ImportSite(
+    private async Task ImportSite(
         ServerManager manager,
         IisSite siteModel,
         string stagingFilesPath,
@@ -411,6 +411,14 @@ public class IisImportService : IIisImportService
                     manager.Sites.Remove(existingSite);
                     if (customNames is not null && customNames.TryGetValue(originalName, out var altName))
                         siteModel.Name = altName;
+                    var cbBinding = siteModel.Bindings.FirstOrDefault();
+                    if (cbBinding is not null && TryExtractPort(cbBinding.BindingInformation, out var cbPort))
+                    {
+                        var newCbPort = await FindAlternativePort(cbPort);
+                        UpdateBindingInformation(cbBinding, newCbPort);
+                        _logger.Information("Site '{Name}' binding port changed from {Old} to {New} (ChangeBinding).",
+                            siteModel.Name, cbPort, newCbPort);
+                    }
                     break;
 
                 default:
@@ -557,7 +565,7 @@ public class IisImportService : IIisImportService
         await Task.CompletedTask;
     }
 
-    private async Task<int> FindAlternativePort(int basePort)
+    public async Task<int> FindAlternativePort(int basePort)
     {
         for (int offset = 1; offset < 1000; offset++)
         {
@@ -650,6 +658,15 @@ public class IisImportService : IIisImportService
             parts[1] = newPort.ToString();
             binding.BindingInformation = string.Join(":", parts);
         }
+    }
+
+    public static bool TryExtractPort(string bindingInformation, out int port)
+    {
+        port = 0;
+        if (string.IsNullOrEmpty(bindingInformation)) return false;
+        var parts = bindingInformation.Split(':');
+        if (parts.Length < 2) return false;
+        return int.TryParse(parts[1], out port);
     }
 
     private byte[]? SafeStringToByteArray(string? hex)
