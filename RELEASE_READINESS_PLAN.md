@@ -1,7 +1,7 @@
 # IISDeploy Studio — Release Readiness Plan
 
 > **Durum:** Plan aktive edildi — paketler tamamlandıkça doğrulanmış kanıtlarla güncelleniyor.
-> **Son doğrulama:** 2026-06-06 — `dotnet build` 0/0, `dotnet test` 63/63 PASS; `publish-release.ps1` + `validate-release.ps1` (8/8 gates) yeniden çalıştırıldı. `release/IISDeployStudio.exe` 182,348,265 B (~174 MB), git=`ce4910b`.
+> **Son doğrulama:** 2026-06-06 — `dotnet build` 0/0, `dotnet test` 68/68 PASS; `publish-release.ps1` + `validate-release.ps1` (8/8 gates) yeniden çalıştırıldı. `release/IISDeployStudio.exe` 182,352,361 B (~174 MB), git=`9a9fe6c`.
 
 ---
 

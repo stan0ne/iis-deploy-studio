@@ -55,9 +55,9 @@ All notable changes to IISDeploy Studio will be documented in this file.
 
 ### Verified
 - `dotnet build IISDeployStudio.slnx` ✅ (0 warnings, 0 errors)
-- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (**63/63** passed — 35 baseline + 4 rollback + 7 idempotency + 5 post-validation + 5 logging + 6 change-binding + 1 skip + 1 pool-reference + 1 app-pool-resolver)
-- `pwsh -File .\scripts\publish-release.ps1` ✅ — `release/IISDeployStudio.exe` (182,348,265 B / ~174 MB) + `release/build.manifest.json` (git=`ce4910b`, buildTime=2026-06-05T21:59:06Z UTC) re-built 2026-06-06
-- `pwsh -File .\scripts\validate-release.ps1` ✅ — 8/8 gates PASS, exit 0, git=`ce4910b`, exeSize=182,348,265 B
+- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (**68/68** passed — 35 baseline + 4 rollback + 7 idempotency + 5 post-validation + 5 logging + 6 change-binding + 1 skip + 1 pool-reference + 1 app-pool-resolver + 5 notification-sound)
+- `pwsh -File .\scripts\publish-release.ps1` ✅ — `release/IISDeployStudio.exe` (182,352,361 B / ~174 MB) + `release/build.manifest.json` (git=`9a9fe6c`, buildTime=2026-06-05T22:28:09Z UTC) re-built 2026-06-06
+- `pwsh -File .\scripts\validate-release.ps1` ✅ — 8/8 gates PASS, exit 0, git=`9a9fe6c`, exeSize=182,352,361 B
 
 ## [1.1.5] — 2026-05-26 — UI Overhaul (publish5)
 
