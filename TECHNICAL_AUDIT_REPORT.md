@@ -3,6 +3,7 @@
 > **Kapsam:** Statik analiz. Dosya sistemi okuması + csproj/manifest/doküman çapraz doğrulaması. Çalıştırma yok.
 > **Yöntem:** Kök dokümanlar + çözüm dosyası + 5 csproj + 99 kaynak dosya + error.log + build.manifest + UI/App.xaml.cs + DI katmanları + Plugin katmanı + test envanteri.
 > **Tarih:** 2026-06-05
+> **Son güncelleme:** 2026-06-06 — Test envanteri 22 → **63** (`[Fact]`+`[Theory]`, Import Hardening 9 commit +28: rollback, idempotency, post-validation, logging, ChangeBinding, Skip, pool-reference, AppPoolNameResolver). `IisImportService` constructor 6 → 7 bağımlılık (`ITransactionManager` eklendi), `ImportSite` imzası `Task<ImportResult>` → `Task<bool>`. `OperationStatus.Skipped` + `IReportGeneratorService.FindPreviousImportAsync` + `AppPoolNameResolver` yeni. Aşağıdaki bölümler 2026-06-05 statik denetimini yansıtır; güncel mimari/sayılar için [CHANGELOG.md](CHANGELOG.md) ve [RELEASE_READINESS_PLAN.md](RELEASE_READINESS_PLAN.md) §0/§9'a bakınız.
 
 ---
 
