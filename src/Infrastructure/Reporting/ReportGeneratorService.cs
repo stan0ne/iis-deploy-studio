@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using IISDeploy.Core.Interfaces;
 using IISDeploy.Core.Models;
+using IISDeploy.Core.Models.Enums;
 
 namespace IISDeploy.Infrastructure.Reporting;
 
@@ -139,6 +140,54 @@ public class ReportGeneratorService : IReportGeneratorService
         await File.WriteAllTextAsync(pdfPath, note + html);
 
         return pdfPath;
+    }
+
+    public async Task<MigrationReport?> FindPreviousImportAsync(
+        string packageChecksum,
+        string targetMachine,
+        string? reportsDirectory = null)
+    {
+        if (string.IsNullOrWhiteSpace(packageChecksum))
+            return null;
+
+        var dir = reportsDirectory ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "IISDeployStudio", "reports");
+
+        if (!Directory.Exists(dir))
+            return null;
+
+        var jsonFiles = Directory.GetFiles(dir, "report_Import_*.json");
+        if (jsonFiles.Length == 0)
+            return null;
+
+        MigrationReport? mostRecent = null;
+
+        foreach (var file in jsonFiles)
+        {
+            MigrationReport? candidate;
+            try
+            {
+                await using var stream = File.OpenRead(file);
+                candidate = await JsonSerializer.DeserializeAsync<MigrationReport>(stream, _jsonOptions);
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (candidate is null) continue;
+            if (candidate.Status == OperationStatus.Failed) continue;
+            if (!string.Equals(candidate.ReportType, "Import", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!string.Equals(candidate.TargetMachine.MachineName, targetMachine, StringComparison.OrdinalIgnoreCase)) continue;
+            if (candidate.SourceManifest?.Checksum is null) continue;
+            if (!string.Equals(candidate.SourceManifest.Checksum, packageChecksum, StringComparison.Ordinal)) continue;
+
+            if (mostRecent is null || candidate.GeneratedAt > mostRecent.GeneratedAt)
+                mostRecent = candidate;
+        }
+
+        return mostRecent;
     }
 
     private static string GetReportPath(MigrationReport report, string extension)

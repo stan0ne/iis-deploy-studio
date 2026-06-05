@@ -9,5 +9,6 @@ public enum OperationStatus
     Failed,
     Cancelled,
     RollingBack,
-    RolledBack
+    RolledBack,
+    Skipped
 }

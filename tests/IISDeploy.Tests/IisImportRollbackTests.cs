@@ -72,7 +72,8 @@ public class IisImportRollbackTests
             new Mock<IConflictResolutionService>().Object,
             new Mock<Core.Interfaces.IBindingManagerService>().Object,
             mockLogger.Object,
-            manager);
+            manager,
+            new Mock<Core.Interfaces.IReportGeneratorService>().Object);
 
         Assert.NotNull(service);
     }

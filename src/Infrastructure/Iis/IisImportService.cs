@@ -16,6 +16,7 @@ public class IisImportService : IIisImportService
     private readonly IBindingManagerService _bindingManager;
     private readonly ILoggingService _logger;
     private readonly TransactionManager _transactionManager;
+    private readonly IReportGeneratorService _reportGenerator;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -28,7 +29,8 @@ public class IisImportService : IIisImportService
         IConflictResolutionService conflictResolver,
         IBindingManagerService bindingManager,
         ILoggingService logger,
-        TransactionManager transactionManager)
+        TransactionManager transactionManager,
+        IReportGeneratorService reportGenerator)
     {
         _packageBuilder = packageBuilder;
         _discovery = discovery;
@@ -36,6 +38,7 @@ public class IisImportService : IIisImportService
         _bindingManager = bindingManager;
         _logger = logger;
         _transactionManager = transactionManager;
+        _reportGenerator = reportGenerator;
     }
 
     public async Task<MigrationReport> ImportPackageAsync(
@@ -75,6 +78,21 @@ public class IisImportService : IIisImportService
 
             var manifest = await _packageBuilder.ReadManifestAsync(packagePath);
             report.SourceManifest = manifest;
+
+            if (!string.IsNullOrEmpty(manifest.Checksum))
+            {
+                var previous = await _reportGenerator.FindPreviousImportAsync(
+                    manifest.Checksum, report.TargetMachine.MachineName);
+                if (previous is not null)
+                {
+                    report.Status = OperationStatus.Skipped;
+                    report.Summary.Add("Skipped: package already imported on this machine.");
+                    report.Summary.Add($"Previous import: {previous.GeneratedAt:yyyy-MM-dd HH:mm:ss} UTC " +
+                        $"(report {previous.ReportId}).");
+                    await scope.CommitAsync();
+                    return report;
+                }
+            }
 
             // Read site configs
             var sites = LoadJsonFiles<IisSite>(Path.Combine(extractionPath, "sites"), "site.json");
