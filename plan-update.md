@@ -3,6 +3,8 @@
 ## Summary
 Inno Setup ile Windows installer (.exe setup), Velopack ile auto-update sistemi. İç ağda IIS üzerinden güncelleme dağıtımı.
 
+Bu plan, mevcut release standardı ile birlikte okunmalıdır: üretim/dağıtım çıkışı artık `release/` klasörüne yazılır ve doğrulama adımı `pwsh -File .\scripts\publish-release.ps1` ile çalıştırılır.
+
 ---
 
 ## 1. Version Tracking Altyapısı
@@ -97,11 +99,13 @@ https://updates.sirket.local/iisdeploy/
 
 ### Build Pipeline (manuel veya script):
 ```
-1. dotnet publish src/UI/IISDeploy.UI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o release
-2. velopack pack release --packId IISDeployStudio --packVersion 1.1.5
-3. iscc.exe installer/setup.iss
-4. releases/* → IIS update sunucusuna kopyala
-5. dist/installer/*.exe → paylaşımlı klasöre kopyala
+1. dotnet build IISDeployStudio.slnx
+2. dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj
+3. pwsh -File .\scripts\publish-release.ps1
+4. velopack pack release --packId IISDeployStudio --packVersion 1.1.5
+5. iscc.exe installer/setup.iss
+6. releases/* → IIS update sunucusuna kopyala
+7. dist/installer/*.exe → paylaşımlı klasöre kopyala
 ```
 
 ### Güncelleme Akışı:

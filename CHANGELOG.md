@@ -8,9 +8,12 @@ All notable changes to IISDeploy Studio will be documented in this file.
 - Standard release publish workflow via `scripts/publish-release.ps1`.
 - Canonical release output folder: `release/`.
 
+### Changed
+- Removed fixed file/dir copy limits from export/import packaging to support large IIS sites without truncation.
+
 ### Verified
 - `dotnet build IISDeployStudio.slnx` ✅
-- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (18/18 passed)
+- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (20/20 passed)
 - `pwsh -File .\scripts\publish-release.ps1` ✅ (release artifact generated)
 
 ## [1.1.5] — 2026-05-26 — UI Overhaul (publish5)

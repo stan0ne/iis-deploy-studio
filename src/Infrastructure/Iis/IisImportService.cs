@@ -559,16 +559,7 @@ public class IisImportService : IIisImportService
 
     private static void CopyDirectory(string sourceDir, string destDir)
     {
-        Directory.CreateDirectory(destDir);
-        foreach (var file in Directory.EnumerateFiles(sourceDir).Take(10000))
-        {
-            var destFile = Path.Combine(destDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite: true);
-        }
-        foreach (var dir in Directory.EnumerateDirectories(sourceDir).Take(1000))
-        {
-            CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
-        }
+        DirectoryCopyHelper.CopyDirectory(sourceDir, destDir);
     }
 
     private static string SanitizeFileName(string name)

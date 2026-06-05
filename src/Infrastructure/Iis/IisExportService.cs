@@ -254,20 +254,7 @@ public class IisExportService : IIisExportService
 
     private static async Task CopyDirectoryAsync(string sourceDir, string destinationDir, CancellationToken ct)
     {
-        Directory.CreateDirectory(destinationDir);
-
-        foreach (var file in Directory.EnumerateFiles(sourceDir).Take(10000))
-        {
-            ct.ThrowIfCancellationRequested();
-            var destFile = Path.Combine(destinationDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite: true);
-        }
-
-        foreach (var dir in Directory.EnumerateDirectories(sourceDir).Take(1000))
-        {
-            var destSubDir = Path.Combine(destinationDir, Path.GetFileName(dir));
-            await CopyDirectoryAsync(dir, destSubDir, ct);
-        }
+        await DirectoryCopyHelper.CopyDirectoryAsync(sourceDir, destinationDir, ct);
     }
 
     private static string SanitizeFileName(string name)

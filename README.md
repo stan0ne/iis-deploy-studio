@@ -4,14 +4,22 @@ Enterprise IIS Export / Import & Migration Platform
 
 A production-grade Windows desktop application for fully exporting and importing Microsoft IIS websites and their dependencies between Windows servers through a modern GUI.
 
-**Version:** 1.0.0 (Phase 1)  
-**Platform:** .NET 10 (Windows x64)
+**Version:** 1.1.5 (Release Standardization baseline)  
+**Platform:** .NET 10 (Windows x64)  
+**Release Output:** `release/` (canonical publish folder)
 
 ---
 
 ## Overview
 
-IISDeploy Studio is a complete IIS migration/orchestration platform designed to migrate IIS websites from one Windows Server to another with minimal manual intervention. It handles sites, applications, virtual directories, application pools, bindings, SSL certificates, configuration settings, and physical files.
+IISDeploy Studio is a complete IIS migration/orchestration platform designed to migrate IIS websites from one Windows Server to another with minimal manual intervention. It handles sites, applications, virtual directories, application pools, bindings, configuration settings, physical files, dependency scans, and package-based transfer workflows.
+
+The current repository baseline has been verified with:
+- `dotnet build IISDeployStudio.slnx`
+- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj`
+- `pwsh -File .\scripts\publish-release.ps1`
+
+These commands are the reference validation path for release preparation.
 
 ### Supported Operating Systems
 
@@ -147,21 +155,30 @@ IISDeployStudio.slnx
 
 ---
 
-## Building
+## Build, Test, and Release
 
 ```bash
-# Build
+# 1. Build the solution
  dotnet build IISDeployStudio.slnx
 
-# Publish release artifact (standard output folder: release/)
-./scripts/publish-release.ps1
+# 2. Run the automated tests
+ dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj
 
-# Or direct publish
+# 3. Publish the canonical release artifact
+ pwsh -File .\scripts\publish-release.ps1
+
+# 4. Direct publish (equivalent command)
  dotnet publish src/UI/IISDeploy.UI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o release
 
-# Run
+# 5. Run the application locally
  dotnet run --project src/UI
 ```
+
+### Release standard
+- Canonical output folder: `release/`
+- Single-file self-contained publish
+- Windows x64 runtime target
+- Build + test + publish are the minimum release gates
 
 **Requirements:**
 - .NET 10 SDK
