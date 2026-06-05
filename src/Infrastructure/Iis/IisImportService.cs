@@ -3,6 +3,7 @@ using IISDeploy.Application.Services;
 using IISDeploy.Core.Interfaces;
 using IISDeploy.Core.Models;
 using IISDeploy.Core.Models.Enums;
+using IISDeploy.Infrastructure.Transactions;
 using Microsoft.Web.Administration;
 
 namespace IISDeploy.Infrastructure.Iis;
@@ -14,6 +15,7 @@ public class IisImportService : IIisImportService
     private readonly IConflictResolutionService _conflictResolver;
     private readonly IBindingManagerService _bindingManager;
     private readonly ILoggingService _logger;
+    private readonly TransactionManager _transactionManager;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -25,13 +27,15 @@ public class IisImportService : IIisImportService
         IIisDiscoveryService discovery,
         IConflictResolutionService conflictResolver,
         IBindingManagerService bindingManager,
-        ILoggingService logger)
+        ILoggingService logger,
+        TransactionManager transactionManager)
     {
         _packageBuilder = packageBuilder;
         _discovery = discovery;
         _conflictResolver = conflictResolver;
         _bindingManager = bindingManager;
         _logger = logger;
+        _transactionManager = transactionManager;
     }
 
     public async Task<MigrationReport> ImportPackageAsync(
@@ -62,6 +66,10 @@ public class IisImportService : IIisImportService
 
         try
         {
+            await using var scope = _transactionManager.BeginTransaction("ImportPackage");
+            var createdPoolNames = new List<string>();
+            var createdSiteNames = new List<string>();
+
             Directory.CreateDirectory(extractionPath);
             ExtractPackage(packagePath, extractionPath);
 
@@ -98,6 +106,7 @@ public class IisImportService : IIisImportService
                 report.Summary.Add($"Dry run complete. {sites.Count} sites, {pools.Count} pools would be imported.");
                 report.Summary.Add($"Conflicts: {conflictReport.SiteConflicts.Count} sites, " +
                     $"{conflictReport.PoolConflicts.Count} pools, {conflictReport.BindingConflicts.Count} bindings.");
+                await scope.CommitAsync();
                 return report;
             }
 
@@ -107,6 +116,7 @@ public class IisImportService : IIisImportService
 
             int importedPools = 0;
             int failedPools = 0;
+            var importedPoolNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             using (var manager = new ServerManager())
             {
@@ -120,18 +130,21 @@ public class IisImportService : IIisImportService
                         var existing = manager.ApplicationPools.FirstOrDefault(p =>
                             string.Equals(p.Name, pool.Name, StringComparison.OrdinalIgnoreCase));
 
+                        var originalPoolName = pool.Name;
+
                         if (existing is not null)
                         {
                             var strategy = conflictReport.PoolConflicts
-                                .FirstOrDefault(c => c.ObjectName == pool.Name)?.ChosenResolution
+                                .FirstOrDefault(c => c.ObjectName == originalPoolName)?.ChosenResolution
                                 ?? ConflictResolutionStrategy.Overwrite;
 
                             if (strategy == ConflictResolutionStrategy.Skip)
                             {
+                                importedPoolNameMap[originalPoolName] = existing.Name;
                                 report.Entries.Add(new ReportEntry
                                 {
                                     Category = "AppPool",
-                                    Item = pool.Name,
+                                    Item = originalPoolName,
                                     Success = true,
                                     Message = "Skipped (already exists)"
                                 });
@@ -142,18 +155,25 @@ public class IisImportService : IIisImportService
                             if (strategy == ConflictResolutionStrategy.Overwrite)
                             {
                                 manager.ApplicationPools.Remove(existing);
+                                importedPoolNameMap[originalPoolName] = originalPoolName;
                             }
                             else if (strategy == ConflictResolutionStrategy.Rename
                                   || strategy == ConflictResolutionStrategy.Clone)
                             {
-                                pool.Name = customNames is not null && customNames.TryGetValue(pool.Name, out var poolName)
+                                pool.Name = customNames is not null && customNames.TryGetValue(originalPoolName, out var poolName)
                                     ? poolName
-                                    : $"{pool.Name}_{(strategy == ConflictResolutionStrategy.Rename ? "Imported" : "Clone")}_{DateTime.Now:yyyyMMddHHmmss}";
+                                    : $"{originalPoolName}_{(strategy == ConflictResolutionStrategy.Rename ? "Imported" : "Clone")}_{DateTime.Now:yyyyMMddHHmmss}";
+                                importedPoolNameMap[originalPoolName] = pool.Name;
                             }
+                        }
+                        else
+                        {
+                            importedPoolNameMap[originalPoolName] = pool.Name;
                         }
 
                         ImportAppPool(manager, pool, credentialOverrides);
                         importedPools++;
+                        createdPoolNames.Add(pool.Name);
 
                         report.Entries.Add(new ReportEntry
                         {
@@ -196,8 +216,10 @@ public class IisImportService : IIisImportService
                     try
                     {
                         _logger.Debug("Importing site: {Name}", site.Name);
-                        ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies, sitePathOverrides, customNames, customPorts);
+                        ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies,
+                            sitePathOverrides, customNames, customPorts, importedPoolNameMap);
                         importedSites++;
+                        createdSiteNames.Add(site.Name);
 
                         report.Entries.Add(new ReportEntry
                         {
@@ -223,6 +245,13 @@ public class IisImportService : IIisImportService
 
                 manager.CommitChanges();
             }
+
+            foreach (var poolName in createdPoolNames)
+                scope.RegisterRollback(() => DeletePoolByNameAsync(poolName));
+            foreach (var siteName in createdSiteNames)
+                scope.RegisterRollback(() => DeleteSiteByNameAsync(siteName));
+
+            await scope.CommitAsync();
 
             report.Status = failedSites > 0 || failedPools > 0
                 ? OperationStatus.CompletedWithWarnings
@@ -314,11 +343,13 @@ public class IisImportService : IIisImportService
         Dictionary<string, ConflictResolutionStrategy>? conflictStrategies,
         Dictionary<string, string>? sitePathOverrides,
         Dictionary<string, string>? customNames,
-        Dictionary<string, int>? customPorts)
+        Dictionary<string, int>? customPorts,
+        Dictionary<string, string>? importedPoolNameMap)
     {
         try
         {
         var originalName = siteModel.Name;
+        AppPoolNameResolver.ApplyResolvedPoolNames(siteModel, importedPoolNameMap);
 
         var existingSite = manager.Sites.FirstOrDefault(s =>
             string.Equals(s.Name, siteModel.Name, StringComparison.OrdinalIgnoreCase));
@@ -436,14 +467,15 @@ public class IisImportService : IIisImportService
             }
         }
 
-        // Set app pool
-        if (!string.IsNullOrEmpty(siteModel.AppPoolName))
+        // Set root application pool from the site definition.
+        var rootApp = site.Applications.FirstOrDefault(a => a.Path == "/");
+        if (rootApp is not null && !string.IsNullOrWhiteSpace(siteModel.AppPoolName))
         {
-            site.Applications.FirstOrDefault(a => a.Path == "/")!.ApplicationPoolName = siteModel.AppPoolName;
+            rootApp.ApplicationPoolName = siteModel.AppPoolName;
         }
 
-        // Import applications
-        foreach (var appModel in siteModel.Applications)
+        // Import child applications (the root app already exists from Site.Add).
+        foreach (var appModel in siteModel.Applications.Where(a => a.Path != "/"))
         {
             try
             {
@@ -642,5 +674,35 @@ public class IisImportService : IIisImportService
             FailedItems = failed,
             Percentage = total > 0 ? (int)((double)completed / total * 100) : 0
         });
+    }
+
+    // Best-effort cleanup helpers used by transaction rollback actions.
+    // Each opens a fresh ServerManager to see committed IIS state.
+    // Exceptions propagate to TransactionScope.RollbackAsync, which logs and continues.
+
+    private static Task DeletePoolByNameAsync(string name)
+    {
+        using var manager = new Microsoft.Web.Administration.ServerManager();
+        var pool = manager.ApplicationPools.FirstOrDefault(p =>
+            string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (pool is not null)
+        {
+            manager.ApplicationPools.Remove(pool);
+            manager.CommitChanges();
+        }
+        return Task.CompletedTask;
+    }
+
+    private static Task DeleteSiteByNameAsync(string name)
+    {
+        using var manager = new Microsoft.Web.Administration.ServerManager();
+        var site = manager.Sites.FirstOrDefault(s =>
+            string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (site is not null)
+        {
+            manager.Sites.Remove(site);
+            manager.CommitChanges();
+        }
+        return Task.CompletedTask;
     }
 }
