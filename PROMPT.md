@@ -1,5 +1,16 @@
 # MASTER PROMPT — Enterprise IIS Export / Import & Migration Platform
 
+> **⚠️ [DEPRECATED — HISTORICAL REFERENCE ONLY]**
+>
+> Bu dosya, projenin ilk tasarım brief'ini içerir. Birçok bölümü güncel kod tabanıyla uyuşmaz (özellikle "TECHNOLOGY STACK" — aşağıdaki düzeltmeler uygulanmıştır).
+>
+> **Güncel doğrular için bak:**
+> - Mimari ve build: [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md)
+> - Sürüm geçmişi ve doğrulanmış durum: [CHANGELOG.md](CHANGELOG.md)
+> - Phasing ve bilinen açıklar: [ROADMAP.md](ROADMAP.md), [RELEASE_READINESS_PLAN.md](RELEASE_READINESS_PLAN.md)
+>
+> **Güncel teknoloji yığını:** .NET 10 (Windows x64) + WPF + Microsoft.Web.Administration 11.1.0 + Serilog + Microsoft.PowerShell.SDK 7.6.1. `WinUI 3` seçeneği iptal edilmiştir.
+
 You are a senior software architect and principal .NET engineer.
 
 Your task is to design and build a production-grade Windows desktop application that can fully export and import Microsoft IIS websites and their dependencies between Windows servers through a modern GUI.
@@ -60,12 +71,10 @@ MANDATORY STACK:
 
 Backend/Core:
 
-* .NET 8
+* .NET 10 (Windows x64)
 
 GUI:
 
-* WinUI 3 preferred
-  OR
 * WPF
 
 Architecture:

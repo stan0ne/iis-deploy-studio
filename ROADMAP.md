@@ -68,5 +68,5 @@
 - [x] Report viewer (ReportViewerWindow with WebBrowser, report list)
 - [x] Performance optimization (async file ops, cancellation support throughout)
 - [x] Large-site export/import copy hardening (removed fixed file/dir limits for full traversal)
-- [x] Unit and integration tests (20/20 passing, 0 build warnings)
+- [x] Unit and integration tests (35/35 passing, 0 build warnings)
 - [x] CI/CD pipeline — deferred (project is self-contained dotnet build)

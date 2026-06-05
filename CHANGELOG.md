@@ -7,14 +7,37 @@ All notable changes to IISDeploy Studio will be documented in this file.
 ### Added
 - Standard release publish workflow via `scripts/publish-release.ps1`.
 - Canonical release output folder: `release/`.
+- `TECHNICAL_AUDIT_REPORT.md` — static audit covering architecture, data flow, design patterns, bottlenecks, and tech debt.
+- Plugin lifecycle wiring: `App.OnStartup` now invokes `PluginHost.LoadPluginsAsync()` and `App.OnExit` invokes `PluginHost.ShutdownAsync()` so the registered plugin host actually runs.
+- `tests/IISDeploy.Tests/IISDeploy.Tests.csproj` now references `IISDeploy.Core` and `IISDeploy.Application` in addition to `IISDeploy.Infrastructure`, enabling direct unit tests against domain models and orchestrators.
+- **PowerShell integration via `IisFeatureScanner`** — `Get-WindowsFeature` cmdlet now runs through `IPowerShellExecutionService` during dependency scans, emitting a `PowerShellFeatureScan` `DependencyInfo` entry. Logged via `ILoggingService.Information` on success and `Warning` on graceful failure.
+- **PowerShell execution policy check at scan start** — `Get-ExecutionPolicy` added to PS service allowlist; new `IisFeatureScanner.CheckPowerShellExecutionPolicyAsync` emits a `PowerShellPolicy` `DependencyInfo` (`Version` = policy name, `Required=false` when policy is `Restricted` or `AllSigned`).
+- **`Install-WindowsFeature` remediation** — new `IisFeatureScanner.RemediateIisFeaturesAsync(List<string> featureNames, CancellationToken)` method invokes `Install-WindowsFeature -Name X` per feature through the allowlisted PS pipeline; returns `Dictionary<string,bool>` mapping each feature to success/failure with graceful per-feature degradation.
+- **`release/build.manifest.json` auto-generation** — `scripts/publish-release.ps1` now writes a release metadata manifest (version, gitHash, gitBranch, buildTime, dotnetVersion, runtime, selfContained, singleFile, exePath, exeSize, publishedBy) after every publish. `scripts/validate-release.ps1` includes a validation gate that verifies the file is present, valid JSON, and has all required fields.
+- **`scripts/validate-release.ps1`** — 8-gate release validation script (SDK presence, required files, repo hygiene, build, test, publish artifact, build manifest, PROMPT.md baseline). Exits 0 only when every gate passes.
+- **`docs/RELEASE_SMOKE_TEST.md`** — 7-section manual smoke test checklist (preflight, app startup, dependency scan, export, import, plugins, logging, shutdown) covering items the automated gates cannot verify.
+- **10 new unit tests** — 8 in `IisFeatureScannerPowerShellTests` (3 base + 3 execution policy + 2 remediation + 1 empty-input guard) and 2 in `PackageBuilderTests` (stable checksum for identical content, different checksum for different content).
 
 ### Changed
 - Removed fixed file/dir copy limits from export/import packaging to support large IIS sites without truncation.
+- `PROMPT.md` marked `[DEPRECATED — HISTORICAL REFERENCE ONLY]` with banner pointing to README/CHANGELOG/ARCHITECTURE for current state. `TECHNOLOGY STACK` section corrected to `.NET 10 + WPF` (was `WinUI 3`/`.NET 8`).
+- `ROADMAP.md` Phase 7 test count corrected from `20/20 passing` to `35/35 passing` (current verified count).
+- `IisFeatureScanner` constructor signature: now requires `IPowerShellExecutionService` and `ILoggingService` in addition to `IIisDiscoveryService`. DI wiring updated accordingly; existing concrete `AddSingleton<IisFeatureScanner>()` registration continues to resolve transparently.
+- `IPowerShellExecutionService` interface now includes `GetExecutionPolicyAsync` (new); `PowerShellExecutionService` allowlist extended with `Get-ExecutionPolicy`.
+- `scripts/publish-release.ps1` now also writes `release/build.manifest.json` after the publish step.
+- `scripts/validate-release.ps1` now generates `release/build.manifest.json` inline after its own publish step, and adds a gate to verify the manifest is present, valid JSON, and contains required fields.
+- `RELEASE_READINESS_PLAN.md` rewritten as a live, evidence-based status: §0 paket durum tablosu (A/B/D/E ✅, C ⚠️), §9 güncel kabul kriterleri tablosu, §8 backlog, §10 release onay süreci. After this commit: §0 shows 5/6 paketler ✅, §8 backlog reduced to 2 items (rollback, installer).
+
+### Removed
+- `error.log` at repo root (residual log from a previous `IIS-MASTER` build path, `publish2` artifact).
+- `inspect.csx` (developer-specific debug script with hardcoded `C:\Users\savas.boluk\Downloads\...` path).
+- `inspect_tool/` orphan console project (not part of `IISDeployStudio.slnx`, no incoming references).
 
 ### Verified
-- `dotnet build IISDeployStudio.slnx` ✅
-- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (20/20 passed)
-- `pwsh -File .\scripts\publish-release.ps1` ✅ (release artifact generated)
+- `dotnet build IISDeployStudio.slnx` ✅ (0 warnings, 0 errors)
+- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj` ✅ (35/35 passed — 22 pre-existing + 3 PS integration + 2 execution policy + 2 remediation + 1 empty-input + 2 idempotency + 3 from other agents' work-in-progress)
+- `pwsh -File .\scripts\publish-release.ps1` ✅ (release artifact + `release/build.manifest.json` generated)
+- `pwsh -File .\scripts\validate-release.ps1` ✅ (8/8 gates PASS, exit 0)
 
 ## [1.1.5] — 2026-05-26 — UI Overhaul (publish5)
 

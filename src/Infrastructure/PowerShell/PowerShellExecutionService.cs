@@ -20,7 +20,7 @@ public class PowerShellExecutionService : IPowerShellExecutionService
         "Write-Output", "Write-Host", "Out-String", "Select-Object", "Where-Object",
         "Get-WebBinding", "New-WebBinding", "Remove-WebBinding",
         "Import-Module", "Get-IISServerManager", "Get-IISConfigSection",
-        "appcmd", "msdeploy"
+        "appcmd", "msdeploy", "Get-ExecutionPolicy"
     ];
 
     public PowerShellExecutionService(ILoggingService logger)
@@ -103,6 +103,11 @@ public class PowerShellExecutionService : IPowerShellExecutionService
         {
             return false;
         }
+    }
+
+    public async Task<string> GetExecutionPolicyAsync(CancellationToken cancellationToken = default)
+    {
+        return (await ExecuteScriptAsync("Get-ExecutionPolicy", null, cancellationToken)).Trim();
     }
 
     private void ValidateScript(string script)

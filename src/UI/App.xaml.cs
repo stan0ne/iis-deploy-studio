@@ -1,5 +1,6 @@
 using IISDeploy.Application;
 using IISDeploy.Infrastructure;
+using IISDeploy.Infrastructure.Plugins;
 using IISDeploy.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,6 +38,9 @@ public partial class App : System.Windows.Application
     {
         await _host.StartAsync();
 
+        var pluginHost = _host.Services.GetRequiredService<PluginHost>();
+        await pluginHost.LoadPluginsAsync();
+
         Log.Information("IISDeploy Studio starting...");
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
         mainWindow.DataContext = _host.Services.GetRequiredService<MainViewModel>();
@@ -50,6 +54,8 @@ public partial class App : System.Windows.Application
         using (_host)
         {
             Log.Information("IISDeploy Studio shutting down.");
+            var pluginHost = _host.Services.GetRequiredService<PluginHost>();
+            await pluginHost.ShutdownAsync();
             await _host.StopAsync();
             await Log.CloseAndFlushAsync();
         }

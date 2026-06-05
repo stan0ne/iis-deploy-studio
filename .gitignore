@@ -5,10 +5,6 @@ release/
 dist/
 releases/
 publish/
-publish2/
-publish3/
-publish4/
-publish5/
 logs/
 
 # Tooling / local artifacts
