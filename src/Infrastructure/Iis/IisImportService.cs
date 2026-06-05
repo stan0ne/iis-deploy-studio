@@ -264,6 +264,8 @@ public class IisImportService : IIisImportService
                 manager.CommitChanges();
             }
 
+            PostValidateImport(createdPoolNames, createdSiteNames, report);
+
             foreach (var poolName in createdPoolNames)
                 scope.RegisterRollback(() => DeletePoolByNameAsync(poolName));
             foreach (var siteName in createdSiteNames)
@@ -692,6 +694,92 @@ public class IisImportService : IIisImportService
             FailedItems = failed,
             Percentage = total > 0 ? (int)((double)completed / total * 100) : 0
         });
+    }
+
+    public static List<ReportEntry> BuildPostValidationEntries(
+        List<string> createdPoolNames,
+        List<string> createdSiteNames,
+        IReadOnlyDictionary<string, string> poolStates,
+        IReadOnlyDictionary<string, string> siteStates)
+    {
+        var entries = new List<ReportEntry>();
+
+        foreach (var name in createdPoolNames)
+        {
+            if (!poolStates.TryGetValue(name, out var state))
+            {
+                entries.Add(new ReportEntry
+                {
+                    Category = "PostValidation",
+                    Item = name,
+                    Success = false,
+                    Message = $"App pool '{name}' not found in IIS after import."
+                });
+            }
+            else if (!string.Equals(state, "Started", StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new ReportEntry
+                {
+                    Category = "PostValidation",
+                    Item = name,
+                    Success = false,
+                    Message = $"App pool '{name}' state is {state} (expected Started)."
+                });
+            }
+        }
+
+        foreach (var name in createdSiteNames)
+        {
+            if (!siteStates.TryGetValue(name, out _))
+            {
+                entries.Add(new ReportEntry
+                {
+                    Category = "PostValidation",
+                    Item = name,
+                    Success = false,
+                    Message = $"Site '{name}' not found in IIS after import."
+                });
+            }
+        }
+
+        return entries;
+    }
+
+    private void PostValidateImport(
+        List<string> createdPoolNames,
+        List<string> createdSiteNames,
+        MigrationReport report)
+    {
+        try
+        {
+            var poolStates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var siteStates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            using (var manager = new Microsoft.Web.Administration.ServerManager())
+            {
+                foreach (var name in createdPoolNames)
+                {
+                    var p = manager.ApplicationPools.FirstOrDefault(x =>
+                        string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+                    poolStates[name] = p?.State.ToString() ?? "__missing__";
+                }
+                foreach (var name in createdSiteNames)
+                {
+                    var s = manager.Sites.FirstOrDefault(x =>
+                        string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+                    siteStates[name] = s is null ? "__missing__" : "present";
+                }
+            }
+
+            foreach (var entry in BuildPostValidationEntries(createdPoolNames, createdSiteNames, poolStates, siteStates))
+            {
+                report.Entries.Add(entry);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning("Post-validation failed: {Message}", ex.Message);
+        }
     }
 
     // Best-effort cleanup helpers used by transaction rollback actions.
