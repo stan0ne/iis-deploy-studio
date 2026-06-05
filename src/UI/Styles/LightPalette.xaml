@@ -1,0 +1,44 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ── Light Palette Tokens ─────────────────────────────────────── -->
+    <SolidColorBrush x:Key="BackgroundBrush"       Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="SurfaceBrush"          Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceElevatedBrush"  Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceHighBrush"      Color="#F9F9F9"/>
+    <SolidColorBrush x:Key="SurfaceLightBrush"     Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryBrush"          Color="#005FB8"/>
+    <SolidColorBrush x:Key="PrimaryDarkBrush"      Color="#004A90"/>
+    <SolidColorBrush x:Key="SecondaryBrush"        Color="#005FB8"/>
+    <SolidColorBrush x:Key="AccentBrush"           Color="#005FB8"/>
+    <SolidColorBrush x:Key="SuccessBrush"          Color="#0F7B0F"/>
+    <SolidColorBrush x:Key="WarningBrush"          Color="#9D5D00"/>
+    <SolidColorBrush x:Key="ErrorBrush"            Color="#C42B1C"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush"      Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush"    Color="#5C5C5C"/>
+    <SolidColorBrush x:Key="TextMutedBrush"        Color="#707070"/>
+    <SolidColorBrush x:Key="BorderBrush"           Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="BorderHighBrush"       Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="HoverBrush"            Color="#F0F0F0"/>
+    <SolidColorBrush x:Key="SelectedBrush"         Color="#E5F1FB"/>
+    <SolidColorBrush x:Key="SidebarBrush"          Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="TitleBarBrush"         Color="#F3F3F3"/>
+
+    <!-- Windows 11 style solid gradients (no actual gradient) -->
+    <SolidColorBrush x:Key="PrimaryGradientBrush" Color="#005FB8"/>
+    <SolidColorBrush x:Key="TitleBarGradientBrush" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="SidebarGradientBrush" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="AccentGradientBrush" Color="#005FB8"/>
+    <SolidColorBrush x:Key="SuccessGradientBrush" Color="#0F7B0F"/>
+    <SolidColorBrush x:Key="ErrorGradientBrush" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="WarningGradientBrush" Color="#9D5D00"/>
+    <SolidColorBrush x:Key="CardBorderGradientBrush" Color="#E5E5E5"/>
+
+    <!-- Semantic Alerts -->
+    <SolidColorBrush x:Key="AlertErrorBackground" Color="#FDE7E9"/>
+    <SolidColorBrush x:Key="AlertErrorText" Color="#9E000B"/>
+    <SolidColorBrush x:Key="AlertSuccessBackground" Color="#DFF6DD"/>
+    <SolidColorBrush x:Key="AlertSuccessText" Color="#0F5C0F"/>
+
+    <sys:Boolean xmlns:sys="clr-namespace:System;assembly=mscorlib" x:Key="IsDarkTheme">False</sys:Boolean>
+</ResourceDictionary>

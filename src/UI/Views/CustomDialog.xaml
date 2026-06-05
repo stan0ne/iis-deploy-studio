@@ -1,0 +1,70 @@
+<Window x:Class="IISDeploy.UI.Views.CustomDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dialog" SizeToContent="Height" Width="480" MaxHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        WindowStyle="SingleBorderWindow"
+        Background="{DynamicResource SurfaceBrush}"
+        BorderBrush="{DynamicResource BorderBrush}"
+        BorderThickness="1">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Icon -->
+        <TextBlock x:Name="IconText" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                   Text="ℹ" FontSize="42" Margin="0,0,20,0"
+                   Foreground="{DynamicResource PrimaryBrush}"
+                   VerticalAlignment="Top"/>
+
+        <!-- Title -->
+        <TextBlock x:Name="TitleText" Grid.Row="0" Grid.Column="1"
+                   Text="Title" FontSize="18" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   Margin="0,0,0,8"/>
+
+        <!-- Message -->
+        <TextBlock x:Name="MessageText" Grid.Row="1" Grid.Column="1"
+                   Text="Message" FontSize="13" TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Margin="0,0,0,16"/>
+
+        <!-- Details (Expander) -->
+        <Expander x:Name="DetailsExpander" Grid.Row="2" Grid.Column="1"
+                  Header="Details" Foreground="{DynamicResource TextMutedBrush}"
+                  Visibility="Collapsed" Margin="0,0,0,16">
+            <TextBox x:Name="DetailsText" IsReadOnly="True"
+                     TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     Height="100" Margin="0,8,0,0"
+                     Background="{DynamicResource SurfaceElevatedBrush}"
+                     BorderThickness="0"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     FontFamily="Consolas" FontSize="11"/>
+        </Expander>
+
+        <!-- Buttons -->
+        <StackPanel x:Name="ButtonPanel" Grid.Row="3" Grid.Column="1"
+                    Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="CancelBtn" Content="Cancel"
+                    Style="{StaticResource GhostButton}"
+                    Width="90" Margin="0,0,10,0"
+                    Click="CancelBtn_Click"
+                    Visibility="Collapsed"/>
+            <Button x:Name="OkBtn" Content="OK"
+                    Style="{StaticResource PrimaryButton}"
+                    Width="90"
+                    Click="OkBtn_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
