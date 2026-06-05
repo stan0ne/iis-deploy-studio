@@ -1,0 +1,15 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>IISDeployStudio-Setup</OutputName>
+    <Platforms>x64</Platforms>
+    <DefineConstants>HarvestPath=..\release\;HarvestVersion=1.1.5</DefineConstants>
+    <SuppressValidation>false</SuppressValidation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+    Harvested payload from release/. Manually listed (no `heat`/`wix harvest` step)
+    because the self-contained single-file publish output is small (~187 MB across
+    11 native + 1 managed assembly) and the list is stable. To regenerate GUIDs
+    after a file rename, run:
+      [guid]::NewGuid() | ForEach-Object { ... }
+  -->
+
+  <Fragment>
+    <ComponentGroup Id="ProductFiles" Directory="INSTALLFOLDER">
+
+      <Component Id="cmpIISDeployStudioExe" Guid="D0EE569C-1F31-4737-A1EF-9055D2799CC0">
+        <File Id="filIISDeployStudioExe"
+              Source="$(var.HarvestPath)IISDeployStudio.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <Component Id="cmpD3DCompiler" Guid="389954D6-54F3-4092-9629-71D5DFFC67BB">
+        <File Id="filD3DCompiler" Source="$(var.HarvestPath)D3DCompiler_47_cor3.dll" />
+      </Component>
+
+      <Component Id="cmpPresentationNative" Guid="70629E0F-496C-47C2-B3C8-C6446B968C83">
+        <File Id="filPresentationNative" Source="$(var.HarvestPath)PresentationNative_cor3.dll" />
+      </Component>
+
+      <Component Id="cmpPenImc" Guid="A5507C1C-46AA-44BC-956F-92BB7FCB40B7">
+        <File Id="filPenImc" Source="$(var.HarvestPath)PenImc_cor3.dll" />
+      </Component>
+
+      <Component Id="cmpWpfgfx" Guid="4214A013-63CD-42A8-8B77-89B90E7B4955">
+        <File Id="filWpfgfx" Source="$(var.HarvestPath)wpfgfx_cor3.dll" />
+      </Component>
+
+      <Component Id="cmpVcruntime140" Guid="9833CA32-9DB6-4A7C-A5BC-77B7EE516201">
+        <File Id="filVcruntime140" Source="$(var.HarvestPath)vcruntime140_cor3.dll" />
+      </Component>
+
+      <Component Id="cmpSni" Guid="E88B543E-C405-4B4F-9B6B-7E08D53AC93E">
+        <File Id="filSni" Source="$(var.HarvestPath)sni.dll" />
+      </Component>
+
+      <Component Id="cmpPwrshplugin" Guid="7655E3D2-523E-4FCE-AD1A-835C6831B860">
+        <File Id="filPwrshplugin" Source="$(var.HarvestPath)pwrshplugin.dll" />
+      </Component>
+
+      <Component Id="cmpPowerShellCore" Guid="DDCEA63B-4CA0-4960-931C-55E286A39D0B">
+        <File Id="filPowerShellCore" Source="$(var.HarvestPath)PowerShell.Core.Instrumentation.dll" />
+      </Component>
+
+      <Component Id="cmpGetFileSigInfo" Guid="56903D3A-1DDC-46B9-A431-C1C6134CC328">
+        <File Id="filGetFileSigInfo" Source="$(var.HarvestPath)getfilesiginforedist.dll" />
+      </Component>
+
+      <Component Id="cmpMmiNative" Guid="A51599ED-AF3A-48CC-BA33-BD1BAFB611AB">
+        <File Id="filMmiNative" Source="$(var.HarvestPath)microsoft.management.infrastructure.native.unmanaged.dll" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

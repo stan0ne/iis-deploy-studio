@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.1.5)'
+        required: true
+        default: '1.1.5'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  build-installer:
+    name: Build Installer (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore solution
+        run: dotnet restore IISDeployStudio.slnx
+
+      - name: Build (Release)
+        run: dotnet build IISDeployStudio.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj -c Release --no-build --nologo
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -eq 'tag') {
+            $tag = "${{ github.ref_name }}"
+            $version = $tag.TrimStart('v')
+          } else {
+            $version = "${{ github.event.inputs.version }}"
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building version: $version"
+
+      - name: Publish self-contained single-file
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          dotnet publish src/UI/IISDeploy.UI.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:Version=$version `
+            -p:AssemblyVersion=$version `
+            -p:FileVersion=$version `
+            -o release
+
+      - name: Generate build manifest
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $exePath = "release/IISDeployStudio.exe"
+          $exeInfo = Get-Item $exePath -ErrorAction SilentlyContinue
+
+          $gitHash = (& git rev-parse HEAD).Trim()
+          $gitBranch = (& git rev-parse --abbrev-ref HEAD).Trim()
+          $dotnetVer = (& dotnet --version).Trim()
+
+          $manifest = [ordered]@{
+              version       = $version
+              gitHash       = $gitHash
+              gitBranch     = $gitBranch
+              buildTime     = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+              dotnetVersion = $dotnetVer
+              runtime       = 'win-x64'
+              selfContained = $true
+              singleFile    = $true
+              exePath       = 'IISDeployStudio.exe'
+              exeSize       = if ($exeInfo) { [int64]$exeInfo.Length } else { 0 }
+              publishedBy   = $env:GITHUB_ACTOR
+          }
+
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content -Path "release/build.manifest.json" -Encoding UTF8
+
+      - name: Build WiX MSI installer
+        run: dotnet build installer/IISDeployStudio.Installer.csproj -c Release
+
+      - name: Stage installer payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path installer\payload -Force | Out-Null
+          Copy-Item -Path release\* -Destination installer\payload\ -Recurse -Force
+
+      - name: Build installer with staged payload
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          dotnet build installer/IISDeployStudio.Installer.csproj `
+            -c Release `
+            -p:HarvestPath=installer\payload\ `
+            -p:HarvestVersion=$env:VERSION
+
+      - name: Verify MSI output
+        shell: pwsh
+        run: |
+          $msi = Get-Item installer/bin/Release/IISDeployStudio-Setup.msi
+          if (-not $msi -or $msi.Length -lt 10MB) {
+              Write-Error "MSI missing or suspiciously small: $msi"
+              exit 1
+          }
+          Write-Host "MSI: $($msi.FullName) ($([math]::Round($msi.Length / 1MB, 2)) MB)"
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IISDeployStudio-Setup-msi
+          path: installer/bin/Release/IISDeployStudio-Setup.msi
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload self-contained folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: IISDeployStudio-portable
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-installer
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download MSI
+        uses: actions/download-artifact@v4
+        with:
+          name: IISDeployStudio-Setup-msi
+          path: dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/IISDeployStudio-Setup.msi
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

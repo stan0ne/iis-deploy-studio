@@ -172,6 +172,10 @@ IISDeployStudio.slnx
 
 # 5. Run the application locally
  dotnet run --project src/UI
+
+# 6. Build the Windows installer (MSI)
+ dotnet build installer/IISDeployStudio.Installer.csproj -c Release
+# → installer/bin/Release/IISDeployStudio-Setup.msi
 ```
 
 ### Release standard
@@ -179,11 +183,29 @@ IISDeployStudio.slnx
 - Single-file self-contained publish
 - Windows x64 runtime target
 - Build + test + publish are the minimum release gates
+- MSI installer produced via WiX 4 (`installer/IISDeployStudio.Installer.csproj`)
 
 **Requirements:**
 - .NET 10 SDK
 - Windows x64 with IIS installed
 - Administrator privileges
+- WiX 4 SDK (auto-restored by `dotnet build` for the installer project)
+
+---
+
+## Installation (End Users)
+
+End users receive `IISDeployStudio-Setup.msi` (~60 MB) and install it on a target Windows Server.
+
+```cmd
+:: Interactive
+IISDeployStudio-Setup.msi
+
+:: Silent (fleet deployment)
+msiexec /i IISDeployStudio-Setup.msi /qn /l*v install.log
+```
+
+See **[docs/INSTALL.md](docs/INSTALL.md)** for the full installation guide — system requirements, silent deployment flags, upgrade/uninstall, troubleshooting, and enterprise deployment notes.
 
 ---
 
