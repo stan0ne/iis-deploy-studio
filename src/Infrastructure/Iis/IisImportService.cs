@@ -236,18 +236,25 @@ public class IisImportService : IIisImportService
                     try
                     {
                         _logger.Information("Importing site: {Name}", site.Name);
-                        await ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies,
-                            sitePathOverrides, customNames, customPorts, importedPoolNameMap);
-                        importedSites++;
-                        createdSiteNames.Add(site.Name);
-
-                        report.Entries.Add(new ReportEntry
+                        var siteImported = await ImportSite(manager, site, stagingFilesPath, conflictReport,
+                            conflictStrategies, sitePathOverrides, customNames, customPorts, importedPoolNameMap);
+                        if (siteImported)
                         {
-                            Category = "Site",
+                            importedSites++;
+                            createdSiteNames.Add(site.Name);
+
+                            report.Entries.Add(new ReportEntry
+                            {
+                                Category = "Site",
                             Item = site.Name,
                             Success = true,
                             Message = "Created"
                         });
+                        }
+                        else
+                        {
+                            report.Entries.Add(BuildSkipReportEntry("Site", site.Name));
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -359,7 +366,7 @@ public class IisImportService : IIisImportService
         }
     }
 
-    private async Task ImportSite(
+    private async Task<bool> ImportSite(
         ServerManager manager,
         IisSite siteModel,
         string stagingFilesPath,
@@ -389,7 +396,7 @@ public class IisImportService : IIisImportService
                 case ConflictResolutionStrategy.Skip:
                     _logger.Information("{Msg}",
                         BuildConflictStrategyLogMessage("Site", originalName, null, strategy));
-                    return;
+                    return false;
 
                 case ConflictResolutionStrategy.Overwrite:
                     manager.Sites.Remove(existingSite);
@@ -534,6 +541,7 @@ public class IisImportService : IIisImportService
             throw new InvalidOperationException(
                 $"Failed to import site '{siteModel.Name}': {ex.Message}", ex);
         }
+        return true;
     }
 
     private async Task ResolveConflicts(
@@ -658,6 +666,17 @@ public class IisImportService : IIisImportService
             parts[1] = newPort.ToString();
             binding.BindingInformation = string.Join(":", parts);
         }
+    }
+
+    public static ReportEntry BuildSkipReportEntry(string category, string itemName)
+    {
+        return new ReportEntry
+        {
+            Category = category,
+            Item = itemName,
+            Success = true,
+            Message = "Skipped (already exists)"
+        };
     }
 
     public static bool TryExtractPort(string bindingInformation, out int port)
