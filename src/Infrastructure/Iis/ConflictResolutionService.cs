@@ -44,16 +44,31 @@ public class ConflictResolutionService : IConflictResolutionService
             }
         }
 
-        foreach (var pool in poolsToImport)
+        var referencedPoolNames = sitesToImport
+            .SelectMany(site => new[]
+            {
+                site.AppPoolName,
+            }.Concat(site.Applications.Select(app => app.ApplicationPoolName)))
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var poolNamesToInspect = poolsToImport
+            .Select(pool => pool.Name)
+            .Concat(referencedPoolNames)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var poolName in poolNamesToInspect)
         {
-            if (existingPoolNames.Contains(pool.Name))
+            if (!string.IsNullOrWhiteSpace(poolName) && existingPoolNames.Contains(poolName))
             {
                 report.PoolConflicts.Add(new ConflictEntry
                 {
                     ObjectType = "AppPool",
-                    ObjectName = pool.Name,
+                    ObjectName = poolName,
                     ConflictType = "NameCollision",
-                    Message = $"Application pool '{pool.Name}' already exists.",
+                    Message = $"Application pool '{poolName}' already exists.",
                     SuggestedResolution = ConflictResolutionStrategy.Overwrite
                 });
             }
