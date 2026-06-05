@@ -96,14 +96,31 @@ logda "limit/10000/1000" gibi sınır referansı varsa → Paket B bozuk.
 - [ ] "Change port" seçildiğinde custom port input görünüyor
 - [ ] Import sonrası çakışma stratejisi uygulanmış (yeni isim / yeni port)
 
-### 4.3 Retry senaryosu (Paket C kısmi doğrulaması)
+### 4.3 Retry + Rollback senaryosu (Paket C doğrulaması)
 - [ ] Import sırasında ağ kesintisi simüle et (paket eksik bırak)
 - [ ] Hata sonrası "Retry" butonu çalışıyor
 - [ ] Aynı paket ile tekrar import denemesi başarılı oluyor
-- [ ] **`IisImportService` rollback henüz tetiklenmiyor** (bilinen açık) — logda
-      "RollbackService" referansı yoksa beklendiği gibi
+- [ ] **Rollback akışı doğrulanır** — hata senaryosunda `ITransactionManager.RollbackAsync` çağrılır; logda `rollback` / `TransactionManager` referansı beklenir
+- [ ] **Hata sonrası IIS durumu import öncesi haline döner** — yarım kalan site / app pool / binding kalmadığı `Get-WebSite`, `Get-IISAppPool`, `Get-WebBinding` ile doğrulanır
 
-**FAIL kriteri:** Çakışma stratejisi uygulanmadı, veya retry başarısız.
+**FAIL kriteri:** Rollback tetiklenmedi, hata sonrası IIS'te yarım kalan artifact kaldı, veya retry başarısız.
+
+### 4.4 Idempotent re-import (Paket C doğrulaması)
+- [ ] Başarılı bir import sonrası aynı paket (aynı manifest checksum) ile tekrar import denenir
+- [ ] Preview penceresi açılır veya `ImportResult.Status = Skipped` mesajı görünür
+- [ ] **IIS'e dokunulmadığı doğrulanır** — `Get-WebSite` / `Get-IISAppPool` çıktısı import öncesi ile birebir aynı (sadece `Last Modified` timestamp değişmemeli)
+- [ ] Report archive'da yeni bir rapor eklenmediği doğrulanır (skip path rapor üretmez)
+
+**FAIL kriteri:** Aynı paket için IIS'e yazma yapıldı veya yeni rapor dosyası oluştu.
+
+### 4.5 Post-import validation (Paket C doğrulaması)
+- [ ] Import tamamlandıktan sonra `IisImportService` son `ValidationResult` UI'da gösteriliyor
+- [ ] Her imported site için "site exists" entry `OK` durumunda
+- [ ] Her imported app pool için "pool exists" entry `OK` durumunda
+- [ ] **Senaryo: import sırasında site elle silinirse** post-validation `Missing`/`Failed` severity ile raporlar
+- [ ] Diagnostic log dosyasında scope start, her phase ve scope end için `Information` satırları mevcut
+
+**FAIL kriteri:** Site/pool eksikse validation sessizce geçti, veya log dosyasında Information seviyesinde milestone kaydı yok.
 
 ---
 
