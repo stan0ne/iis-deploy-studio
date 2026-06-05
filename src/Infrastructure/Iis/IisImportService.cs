@@ -144,7 +144,7 @@ public class IisImportService : IIisImportService
 
                     try
                     {
-                        _logger.Debug("Importing app pool: {Name}", pool.Name);
+                        _logger.Information("Importing app pool: {Name}", pool.Name);
                         var existing = manager.ApplicationPools.FirstOrDefault(p =>
                             string.Equals(p.Name, pool.Name, StringComparison.OrdinalIgnoreCase));
 
@@ -159,6 +159,8 @@ public class IisImportService : IIisImportService
                             if (strategy == ConflictResolutionStrategy.Skip)
                             {
                                 importedPoolNameMap[originalPoolName] = existing.Name;
+                                _logger.Information("{Msg}",
+                                    BuildConflictStrategyLogMessage("App pool", originalPoolName, null, strategy));
                                 report.Entries.Add(new ReportEntry
                                 {
                                     Category = "AppPool",
@@ -233,7 +235,7 @@ public class IisImportService : IIisImportService
 
                     try
                     {
-                        _logger.Debug("Importing site: {Name}", site.Name);
+                        _logger.Information("Importing site: {Name}", site.Name);
                         ImportSite(manager, site, stagingFilesPath, conflictReport, conflictStrategies,
                             sitePathOverrides, customNames, customPorts, importedPoolNameMap);
                         importedSites++;
@@ -279,6 +281,8 @@ public class IisImportService : IIisImportService
 
             report.Summary.Add($"Imported {importedSites} sites ({failedSites} failed), " +
                 $"{importedPools} app pools ({failedPools} failed).");
+            _logger.Information("Import complete: {Sites} sites, {Pools} pools imported; {SiteFails} site failures, {PoolFails} pool failures.",
+                importedSites, importedPools, failedSites, failedPools);
         }
         catch (Exception ex)
         {
@@ -383,6 +387,8 @@ public class IisImportService : IIisImportService
             switch (strategy)
             {
                 case ConflictResolutionStrategy.Skip:
+                    _logger.Information("{Msg}",
+                        BuildConflictStrategyLogMessage("Site", originalName, null, strategy));
                     return;
 
                 case ConflictResolutionStrategy.Overwrite:
@@ -694,6 +700,26 @@ public class IisImportService : IIisImportService
             FailedItems = failed,
             Percentage = total > 0 ? (int)((double)completed / total * 100) : 0
         });
+    }
+
+    public static string BuildConflictStrategyLogMessage(
+        string entityType, string originalName, string? newName, ConflictResolutionStrategy strategy)
+    {
+        return strategy switch
+        {
+            ConflictResolutionStrategy.Skip =>
+                $"{entityType} '{originalName}' skipped (already exists).",
+            ConflictResolutionStrategy.Rename =>
+                $"{entityType} '{originalName}' renamed to '{newName}'.",
+            ConflictResolutionStrategy.Clone =>
+                $"{entityType} '{originalName}' cloned as '{newName}'.",
+            ConflictResolutionStrategy.Overwrite =>
+                $"{entityType} '{originalName}' overwritten.",
+            ConflictResolutionStrategy.ChangeBinding =>
+                $"{entityType} '{originalName}' binding changed.",
+            _ =>
+                $"{entityType} '{originalName}' processed with strategy {strategy}."
+        };
     }
 
     public static List<ReportEntry> BuildPostValidationEntries(
