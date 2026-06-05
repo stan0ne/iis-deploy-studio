@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Core\IISDeploy.Core.csproj" />
     <ProjectReference Include="..\..\src\Application\IISDeploy.Application.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\IISDeploy.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\UI\IISDeploy.UI.csproj" />
   </ItemGroup>
 
 </Project>

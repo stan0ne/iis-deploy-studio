@@ -15,6 +15,7 @@ public class ImportOrchestrator : IImportOrchestrator
     private readonly ITransactionManager _transactionManager;
     private readonly IReportGeneratorService _reportGenerator;
     private readonly ILoggingService _logger;
+    private readonly INotificationSoundService _soundService;
 
     public ImportOrchestrator(
         IIisImportService importService,
@@ -23,7 +24,8 @@ public class ImportOrchestrator : IImportOrchestrator
         IConflictResolutionService conflictResolver,
         ITransactionManager transactionManager,
         IReportGeneratorService reportGenerator,
-        ILoggingService logger)
+        ILoggingService logger,
+        INotificationSoundService soundService)
     {
         _importService = importService;
         _packageBuilder = packageBuilder;
@@ -32,6 +34,7 @@ public class ImportOrchestrator : IImportOrchestrator
         _transactionManager = transactionManager;
         _reportGenerator = reportGenerator;
         _logger = logger;
+        _soundService = soundService;
     }
 
     public async Task<ImportResult> ImportAsync(
@@ -97,6 +100,7 @@ public class ImportOrchestrator : IImportOrchestrator
 
             _logger.OperationComplete("ImportOrchestration", result.Duration,
                 "Import completed: {Success}", result.Success);
+            _soundService.PlaySuccess();
         }
         catch (OperationCanceledException)
         {
@@ -110,6 +114,7 @@ public class ImportOrchestrator : IImportOrchestrator
                 msg += $" | Inner [{ex.InnerException.GetType().Name}]: {ex.InnerException.Message}";
             result.Errors.Add(msg);
             result.Success = false;
+            _soundService.PlayFailure();
             _logger.Error(ex, "Import failed: {Message}", ex.Message);
         }
 

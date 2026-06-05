@@ -15,6 +15,7 @@ public class ExportOrchestratorTests
         var mockDiscovery = new Mock<IIisDiscoveryService>();
         var mockReport = new Mock<IReportGeneratorService>();
         var mockLogger = new Mock<Core.Interfaces.ILoggingService>();
+        var mockSound = new Mock<INotificationSoundService>();
 
         mockValidation
             .Setup(v => v.ValidateEnvironmentAsync())
@@ -25,7 +26,8 @@ public class ExportOrchestratorTests
             mockValidation.Object,
             mockDiscovery.Object,
             mockReport.Object,
-            mockLogger.Object);
+            mockLogger.Object,
+            mockSound.Object);
 
         var request = new Application.DTOs.ExportRequest
         {
@@ -46,6 +48,7 @@ public class ExportOrchestratorTests
         var mockDiscovery = new Mock<IIisDiscoveryService>();
         var mockReport = new Mock<IReportGeneratorService>();
         var mockLogger = new Mock<Core.Interfaces.ILoggingService>();
+        var mockSound = new Mock<INotificationSoundService>();
 
         var mockValidation = new Mock<IValidationService>();
         mockValidation
@@ -69,7 +72,8 @@ public class ExportOrchestratorTests
             mockValidation.Object,
             mockDiscovery.Object,
             mockReport.Object,
-            mockLogger.Object);
+            mockLogger.Object,
+            mockSound.Object);
 
         var request = new Application.DTOs.ExportRequest
         {
@@ -89,6 +93,7 @@ public class ExportOrchestratorTests
         var mockDiscovery = new Mock<IIisDiscoveryService>();
         var mockReport = new Mock<IReportGeneratorService>();
         var mockLogger = new Mock<Core.Interfaces.ILoggingService>();
+        var mockSound = new Mock<INotificationSoundService>();
 
         var mockValidation = new Mock<IValidationService>();
         mockValidation
@@ -116,7 +121,8 @@ public class ExportOrchestratorTests
             mockValidation.Object,
             mockDiscovery.Object,
             mockReport.Object,
-            mockLogger.Object);
+            mockLogger.Object,
+            mockSound.Object);
 
         var request = new Application.DTOs.ExportRequest
         {

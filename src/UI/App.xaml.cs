@@ -1,6 +1,8 @@
 using IISDeploy.Application;
+using IISDeploy.Core.Interfaces;
 using IISDeploy.Infrastructure;
 using IISDeploy.Infrastructure.Plugins;
+using IISDeploy.UI.Services;
 using IISDeploy.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,6 +30,7 @@ public partial class App : System.Windows.Application
             {
                 services.AddInfrastructure();
                 services.AddApplication();
+                services.AddSingleton<INotificationSoundService, WpfNotificationSoundService>();
                 services.AddTransient<MainViewModel>();
                 services.AddTransient<MainWindow>();
             })

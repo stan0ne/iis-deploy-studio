@@ -13,19 +13,22 @@ public class ExportOrchestrator : IExportOrchestrator
     private readonly IIisDiscoveryService _discoveryService;
     private readonly IReportGeneratorService _reportGenerator;
     private readonly ILoggingService _logger;
+    private readonly INotificationSoundService _soundService;
 
     public ExportOrchestrator(
         IIisExportService exportService,
         IValidationService validationService,
         IIisDiscoveryService discoveryService,
         IReportGeneratorService reportGenerator,
-        ILoggingService logger)
+        ILoggingService logger,
+        INotificationSoundService soundService)
     {
         _exportService = exportService;
         _validationService = validationService;
         _discoveryService = discoveryService;
         _reportGenerator = reportGenerator;
         _logger = logger;
+        _soundService = soundService;
     }
 
     public async Task<ExportResult> ExportAsync(
@@ -77,6 +80,7 @@ public class ExportOrchestrator : IExportOrchestrator
 
             _logger.OperationComplete("ExportOrchestration", result.Duration,
                 "Package created: {Path}", packagePath);
+            _soundService.PlaySuccess();
         }
         catch (OperationCanceledException)
         {
@@ -86,6 +90,7 @@ public class ExportOrchestrator : IExportOrchestrator
         catch (Exception ex)
         {
             result.Errors.Add(ex.Message);
+            _soundService.PlayFailure();
             _logger.Error(ex, "Export failed");
         }
 
