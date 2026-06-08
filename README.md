@@ -68,7 +68,7 @@ IISDeployStudio.slnx
 ### Application Layer
 - **DTOs:** ExportRequest/Result, ImportRequest/Result, SiteTreeNode, AppPoolSummary, ServerSummary, DependencyScanRequest/Result, CredentialEntry
 - **Orchestrator Interfaces:** IExportOrchestrator, IImportOrchestrator, IDashboardService, IDependencyAnalysisService
-- **Stub Implementations:** DashboardService, ExportOrchestrator, ImportOrchestrator, DependencyAnalysisService
+- **Implementations:** DashboardService, ExportOrchestrator, ImportOrchestrator, DependencyAnalysisService
 
 ### Infrastructure Layer
 - **IisDiscoveryService** — Full IIS server discovery using Microsoft.Web.Administration:
@@ -98,60 +98,63 @@ IISDeployStudio.slnx
 
 ---
 
-## Planned Phases
+## Completed Phases
 
-### Phase 2 — Export Engine
+### Phase 2 — Export Engine ✅
 - Full export engine with streaming ZIP packaging
 - Custom `.iispackage` format
-- Certificate export (encrypted PFX)
 - Configuration export (web.config, appsettings.json, .env)
 - Physical file packaging
-- NTFS permission capture (optional)
-- Schema generation
-- Checksum verification
-
-### Phase 3 — Import Engine & Validation
-- Package reading and manifest parsing
-- Environment validation (IIS features, runtimes, modules)
-- Conflict detection (site names, bindings, ports, app pools)
-- Automatic remediation
-- Credential management (secure entry dialogs)
-- Connection string remapping
-- Dry-run simulation mode
-
-### Phase 4 — Dependency Scanner
-- Runtime detection (.NET, ASP.NET Core, VC++ Redist)
-- IIS module detection (URL Rewrite, ARR, FastCGI)
-- Third-party dependency detection (PHP, Node.js, Java)
-- ODBC DSN detection
-- COM registration checks
-- Windows Feature analysis
-- GAC assembly scanning
-- Installation package suggestions
-
-### Phase 5 — Reporting & Security
-- HTML/JSON/PDF report generation
-- Serilog advanced configuration
-- Package integrity validation
-- Secure credential handling
-- PowerShell execution service
-- Role-based checks
-
-### Phase 6 — Advanced Features
-- Conflict resolution strategies (Overwrite, Clone, Rename, Port change)
-- Rollback support
-- Partial import recovery
-- Transaction-like operations
-- Resumable exports
-
-### Phase 7 — Polish & Optimization
-- Dark mode
-- Progress bars with ETA
+- Multi-site and full-server export modes
+- Progress reporting with percentage
 - Cancellation support
-- Toast notifications
-- Detailed log viewer
-- Report viewer
-- Performance optimization
+
+### Phase 3 — Import Engine & Validation ✅
+- Package reader with manifest parsing
+- IIS object creation (sites, apps, pools, bindings)
+- Environment compatibility check
+- Conflict detection (names, ports, bindings, app pools)
+- Automatic remediation engine (port changes, conflict strategies)
+- Transaction-scoped rollback for IIS import
+- Idempotent re-import via manifest checksum
+- Post-import state validation
+
+### Phase 4 — Dependency Scanner ✅
+- Runtime detection (.NET, ASP.NET Core, VC++)
+- IIS module detection (URL Rewrite, ARR, FastCGI, WebSocket)
+- Third-party detection (PHP, Node.js, Java, ODBC DSNs)
+- Windows Feature analysis with PowerShell integration
+- Installation suggestions with download URLs
+
+### Phase 5 — Reporting & Security ✅
+- HTML/JSON/PDF report generation
+- Advanced Serilog configuration (Console + rolling file)
+- Package integrity with checksums (SHA-256)
+- Secure credential handling (DPAPI, SecureString)
+- PowerShell execution service (command allowlist, anti-injection)
+- Certificate export/import service (encrypted PFX)
+- Notification sound on export/import completion
+
+### Phase 6 — Advanced Features ✅
+- Conflict resolution strategies (Overwrite, Skip, Clone, Rename, ChangeBinding)
+- Rollback support (TransactionManager with cleanup actions)
+- Transaction-like operations
+- Plugin architecture (IIisDeployPlugin, PluginHost)
+- ExecuteWithRetryAsync for resilient operations
+
+### Phase 7 — Polish & Optimization ✅
+- Dark mode (ThemeService with toggle, full color palette swap)
+- Toast notifications (non-blocking, animated)
+- Detailed log viewer (LogViewerWindow)
+- Report viewer (ReportViewerWindow)
+- Performance optimization (async file ops, cancellation)
+- WiX 7 MSI installer (58 MB)
+- GitHub Actions CI/CD pipeline
+- End-user install guide (`docs/INSTALL.md`)
+- Toolbar & server card icon redesign (DynamicResource theme-aware)
+- Scan button fix (ExecutionPolicy.RemoteSigned)
+- Multi-resolution app icon (7 slots: 16/24/32/48/64/128/256)
+- 68/68 unit tests passing
 
 ---
 
@@ -183,20 +186,24 @@ IISDeployStudio.slnx
 - Single-file self-contained publish
 - Windows x64 runtime target
 - Build + test + publish are the minimum release gates
-- MSI installer produced via WiX 4 (`installer/IISDeployStudio.Installer.csproj`)
+- MSI installer produced via WiX 7 (`installer/IISDeployStudio.Installer.csproj`)
 
 **Requirements:**
 - .NET 10 SDK
 - Windows x64 with IIS installed
 - Administrator privileges
-- WiX 4 SDK (auto-restored by `dotnet build` for the installer project)
+- WiX 7 SDK (auto-restored by `dotnet build` for the installer project)
 
 ---
 
 ## Installation (End Users)
 
-End users receive `IISDeployStudio-Setup.msi` (~60 MB) and install it on a target Windows Server.
+### Option 1: ZIP (Portable)
+1. Download `IISDeployStudio-v1.1.6.zip` from [GitHub Releases](https://github.com/stan0ne/iis-deploy-studio/releases/tag/v1.1.6)
+2. Extract to any folder
+3. Run `IISDeployStudio.exe`
 
+### Option 2: MSI (Installer)
 ```cmd
 :: Interactive
 IISDeployStudio-Setup.msi
@@ -232,7 +239,7 @@ See **[docs/INSTALL.md](docs/INSTALL.md)** for the full installation guide — s
 - App pool credentials: username only, password requested at import
 - No hardcoded paths or credentials
 - Package integrity verification via checksums
-- PowerShell execution with parameter validation (coming in Phase 5)
+- PowerShell execution with parameter validation (Phase 5 ✅)
 
 ---
 
