@@ -15,7 +15,7 @@
 | **D** | PowerShell Entegrasyonu | ✅ DONE | `IisFeatureScanner` artık `Get-WindowsFeature` çağırıyor + execution policy check + `Install-WindowsFeature` remediation; 11 PS testi yeşil |
 | **E** | Release Quality Gates | ✅ DONE | `scripts/validate-release.ps1` (8 otomatik gate) + `docs/RELEASE_SMOKE_TEST.md` (manuel checklist) + `release/build.manifest.json` üretimi |
 
-**Test sayısı:** 18 → 22 → 25 → 35 → **63** (şu an doğrulanan: 63/63 PASS)
+**Test sayısı:** 18 → 22 → 25 → 35 → 63 → **68** (şu an doğrulanan: 68/68 PASS)
 
 ---
 

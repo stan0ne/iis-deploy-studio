@@ -2,7 +2,7 @@
 
 All notable changes to IISDeploy Studio will be documented in this file.
 
-## [Unreleased] — 2026-06-08 — Installer Pipeline + Scan Fix + Icon Redesign
+## [1.1.6] — 2026-06-08 — Installer Pipeline + Scan Fix + Icon Redesign
 
 ### Added
 - **WiX 7 MSI installer** — `installer/IISDeployStudio.Installer.csproj` (WiXToolset.Sdk 7.0.0) produces `IISDeployStudio-Setup.msi` (~58 MB, perMachine, x64). `Product.wxs` defines Package metadata, StandardDirectory tree (`ProgramFilesFolder`), Start Menu shortcut, AppVersionRegistry, PluginsFolder. `PackageFiles.wxs` lists 11 harvested components from `release/` payload. `WixToolset.UI.wixext` provides WixUI_Minimal dialog set.

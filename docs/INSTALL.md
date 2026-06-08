@@ -5,7 +5,7 @@ This guide covers installing IISDeploy Studio on a production Windows Server usi
 ## 1. System Requirements
 
 ### Minimum
-- **OS:** Windows Server 2012 (build 17763) or later — x64
+- **OS:** Windows Server 2012 R2 (build 9600) or later — x64
 - **IIS:** IIS 7.5 or later with the IIS Management Console role
 - **.NET:** .NET 10 Desktop Runtime (x64) — the MSI bundles the self-contained app, but a recent Desktop Runtime is recommended for system-wide tools
 - **Privileges:** Administrator (IIS site/application pool management requires elevation)
@@ -26,7 +26,7 @@ The MSI is **x64-only**. There is no 32-bit build.
 
 Official MSI builds are published as GitHub Release artifacts:
 
-1. Navigate to the repository's [Releases](https://github.com/) page.
+1. Navigate to the repository's [Releases](https://github.com/stan0ne/iis-deploy-studio/releases) page.
 2. Download `IISDeployStudio-Setup.msi` from the latest release.
 3. Verify the file size is ~60 MB (a partial download will fail MSI validation).
 
