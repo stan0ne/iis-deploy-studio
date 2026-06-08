@@ -4,7 +4,7 @@ Enterprise IIS Export / Import & Migration Platform
 
 A production-grade Windows desktop application for fully exporting and importing Microsoft IIS websites and their dependencies between Windows servers through a modern GUI.
 
-**Version:** 1.1.5 (Release Standardization baseline)  
+**Version:** 1.1.6 (Installer Pipeline + Scan Fix + Icon Redesign)  
 **Platform:** .NET 10 (Windows x64)  
 **Release Output:** `release/` (canonical publish folder)
 

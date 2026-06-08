@@ -189,6 +189,7 @@ public class IisFeatureScanner
         CancellationToken cancellationToken)
     {
         const string script = @"
+Import-Module ServerManager -ErrorAction Stop
 $features = @('Web-Server', 'Web-Common-Http', 'Web-Asp-Net45', 'Web-Scripting-Tools', 'Web-ISAPI-Ext', 'Web-ISAPI-Filter')
 Get-WindowsFeature -Name $features -ErrorAction SilentlyContinue | Select-Object Name, InstallState
 ";

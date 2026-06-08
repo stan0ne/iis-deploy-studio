@@ -68,5 +68,12 @@
 - [x] Report viewer (ReportViewerWindow with WebBrowser, report list)
 - [x] Performance optimization (async file ops, cancellation support throughout)
 - [x] Large-site export/import copy hardening (removed fixed file/dir limits for full traversal)
-- [x] Unit and integration tests (63/63 passing, 0 build warnings — 35 baseline + 28 Import Hardening: rollback, idempotency, post-validation, logging, ChangeBinding, Skip, pool-reference, AppPoolNameResolver)
-- [x] CI/CD pipeline — deferred (project is self-contained dotnet build)
+- [x] Unit and integration tests (68/68 passing, 0 build warnings — 35 baseline + 28 Import Hardening + 5 notification-sound)
+- [x] WiX 7 MSI installer (`installer/IISDeployStudio.Installer.csproj`, WiXToolset.Sdk 7.0.0)
+- [x] GitHub Actions CI + Release pipeline (`.github/workflows/ci.yml`, `release.yml`)
+- [x] End-user install guide (`docs/INSTALL.md`)
+- [x] Toolbar & server card icon redesign — DynamicResource theme-aware brushes
+- [x] Scan button fix — ExecutionPolicy.RemoteSigned + Import-Module ServerManager
+- [x] Multi-resolution app icon (7 slots: 16/24/32/48/64/128/256)
+- [x] Notification sound on export/import completion
+- [x] Transaction-scoped rollback for IIS import

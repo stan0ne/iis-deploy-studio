@@ -37,7 +37,12 @@ public class PowerShellExecutionService : IPowerShellExecutionService
 
         return await Task.Run(() =>
         {
-            using var ps = System.Management.Automation.PowerShell.Create();
+            // Bypass system ExecutionPolicy for this app's PowerShell instance.
+            // ServerManager (Get-WindowsFeature) and other system modules
+            // require at least RemoteSigned to load.
+            var iss = InitialSessionState.CreateDefault();
+            iss.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.RemoteSigned;
+            using var ps = System.Management.Automation.PowerShell.Create(iss);
             ps.AddScript(script);
 
             if (parameters is not null)
