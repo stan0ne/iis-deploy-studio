@@ -238,7 +238,9 @@ See **[docs/INSTALL.md](docs/INSTALL.md)** for the full installation guide — s
 
 ## License
 
-Proprietary — Internal enterprise use.
+GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
+
+Free to use, modify, and distribute under GPL-3.0. If you modify and distribute, you must also release your source code under the same license.
 
 ---
 

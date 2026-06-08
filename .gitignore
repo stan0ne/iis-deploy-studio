@@ -10,6 +10,9 @@ logs/
 # Tooling / local artifacts
 .codegraph/
 .commandcode/
+omo/
+omo/
 *.log
 *.user
 *.suo
+*.zip
