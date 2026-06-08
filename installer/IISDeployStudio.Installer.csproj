@@ -7,6 +7,7 @@
     <DefineConstants>HarvestPath=..\release\;HarvestVersion=1.1.6</DefineConstants>
     <SuppressValidation>false</SuppressValidation>
     <WixAcceptOSMF>true</WixAcceptOSMF>
+    <AcceptEula>wix7</AcceptEula>
   </PropertyGroup>
 
   <ItemGroup>
