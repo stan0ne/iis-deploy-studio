@@ -4,8 +4,9 @@
     <OutputType>Package</OutputType>
     <OutputName>IISDeployStudio-Setup</OutputName>
     <Platforms>x64</Platforms>
-    <DefineConstants>HarvestPath=..\release\;HarvestVersion=1.1.5</DefineConstants>
+    <DefineConstants>HarvestPath=..\release\;HarvestVersion=1.1.6</DefineConstants>
     <SuppressValidation>false</SuppressValidation>
+    <WixAcceptOSMF>true</WixAcceptOSMF>
   </PropertyGroup>
 
   <ItemGroup>
