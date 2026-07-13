@@ -1,218 +1,70 @@
 # IISDeploy Studio
 
-Enterprise IIS Export / Import & Migration Platform
+> Enterprise IIS Export / Import & Migration Platform
 
-A production-grade Windows desktop application for fully exporting and importing Microsoft IIS websites and their dependencies between Windows servers through a modern GUI.
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
+[![Windows](https://img.shields.io/badge/Windows-x64-0078D6?logo=windows)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/Build-passing-brightgreen)](https://github.com/stan0ne/iis-deploy-studio/actions)
 
-**Version:** 1.1.6 (Installer Pipeline + Scan Fix + Icon Redesign)  
-**Platform:** .NET 10 (Windows x64)  
-**Release Output:** `release/` (canonical publish folder)
+A production-grade Windows desktop application for exporting and importing Microsoft IIS websites and their dependencies between Windows servers — through a modern WPF GUI, with full package-based transfer, dependency scanning, and rollback support.
 
 ---
 
-## Overview
+## Quick Start
 
-IISDeploy Studio is a complete IIS migration/orchestration platform designed to migrate IIS websites from one Windows Server to another with minimal manual intervention. It handles sites, applications, virtual directories, application pools, bindings, configuration settings, physical files, dependency scans, and package-based transfer workflows.
+```bash
+# Build
+dotnet build IISDeployStudio.slnx
 
-The current repository baseline has been verified with:
-- `dotnet build IISDeployStudio.slnx`
-- `dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj`
-- `pwsh -File .\scripts\publish-release.ps1`
+# Test
+dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj
 
-These commands are the reference validation path for release preparation.
+# Run
+dotnet run --project src/UI
 
-### Supported Operating Systems
+# Publish portable release
+dotnet publish src/UI/IISDeploy.UI.csproj -c Release -r win-x64 --self-contained true -o release
+```
 
-- Windows Server 2012 / 2016 / 2019 / 2022 / 2025
+**Requirements:** .NET 10 SDK, Windows x64 with IIS, Administrator privileges.
+
+---
+
+## Features
+
+| Area | Capabilities |
+|------|-------------|
+| **Export** | Full IIS site export to `.iispackage` (ZIP) — sites, apps, vdirs, app pools, bindings, configs, physical files. Multi-site and full-server modes. |
+| **Import** | Package reader, IIS object creation, conflict detection (names/ports/bindings), automatic remediation (port changes, rename, clone), transaction-scoped rollback, idempotent re-import. |
+| **Dependency Scan** | Runtime detection (.NET, ASP.NET Core, VC++), IIS modules (URL Rewrite, ARR, FastCGI), third-party (PHP, Node.js, Java, ODBC), Windows Features. |
+| **Security** | DPAPI credential encryption, SecureString handling, encrypted PFX export, PowerShell execution with parameter validation, SHA-256 package integrity. |
+| **Reporting** | HTML / JSON / PDF reports, structured Serilog logging (console + rolling file). |
+| **UI** | Dark mode, toast notifications, log viewer, report viewer, progress reporting, cancellation support. |
+| **Resilience** | Retry with backoff, transactional rollback, plugin architecture (`IIisDeployPlugin`), conflict resolution strategies. |
 
 ---
 
 ## Architecture
 
+Clean Architecture with strict dependency flow:
+
 ```
-IISDeployStudio.slnx
-│
-├── src/Core/           IISDeploy.Core         — Domain models, interfaces, enums
-├── src/Application/    IISDeploy.Application  — DTOs, service interfaces, orchestrators
-├── src/Infrastructure/ IISDeploy.Infrastructure — IIS integration, logging, external APIs
-└── src/UI/             IISDeploy.UI           — WPF desktop application (MVVM)
-```
-
-**Clean Architecture — Dependency Flow:**
-```
-  UI → Infrastructure → Application → Core
-```
-
-- **Core** has no external dependencies — pure domain logic
-- **Application** defines use cases and DTOs
-- **Infrastructure** implements interfaces from Core using Microsoft.Web.Administration
-- **UI** is a WPF MVVM application with DI via Microsoft.Extensions.Hosting
-
-### Key Design Patterns
-
-- **MVVM** — Model-View-ViewModel for the UI layer
-- **Dependency Injection** — Microsoft.Extensions.DependencyInjection
-- **Async/Await** — All I/O operations are async
-- **Repository/Service Pattern** — Clean separation of concerns
-- **SOLID Principles** — Single responsibility, interface segregation, dependency inversion
-
----
-
-## Phase 1 — Completed Features
-
-### Core Layer
-- **Models:** IisSite, IisApplication, IisVirtualDirectory, IisApplicationPool, BindingInfo, CertificateInfo, PackageManifest, ValidationResult, OperationProgress, MigrationReport, DatabaseConfig
-- **Enums:** ExportMode, ConflictResolutionStrategy, AppPoolIdentityType, PipelineMode, ValidationSeverity, PackageStatus, OperationStatus
-- **Interfaces:** IIisDiscoveryService, IIisExportService, IIisImportService, IDependencyScannerService, IPackageBuilderService, IValidationService, IReportGeneratorService, ICertificateExportService, IBindingManagerService, IPowerShellExecutionService, ILoggingService
-
-### Application Layer
-- **DTOs:** ExportRequest/Result, ImportRequest/Result, SiteTreeNode, AppPoolSummary, ServerSummary, DependencyScanRequest/Result, CredentialEntry
-- **Orchestrator Interfaces:** IExportOrchestrator, IImportOrchestrator, IDashboardService, IDependencyAnalysisService
-- **Implementations:** DashboardService, ExportOrchestrator, ImportOrchestrator, DependencyAnalysisService
-
-### Infrastructure Layer
-- **IisDiscoveryService** — Full IIS server discovery using Microsoft.Web.Administration:
-  - Read all sites, applications, virtual directories
-  - Read all application pools with detailed configuration
-  - Read all bindings including SSL/SNI detection
-  - Map native IIS objects to domain models
-- **ValidationService** — Environment validation:
-  - Admin privilege check
-  - IIS accessibility check
-  - Site existence and physical path validation
-  - Package file validation (ZIP header, extension)
-- **ConsoleLoggingService** — Structured console logging
-- **DI Registration** — `AddInfrastructure()` extension method
-
-### UI Layer (WPF)
-- **MVVM Framework:** ObservableObject base, RelayCommand with async support
-- **MainWindow** — Enterprise dashboard:
-  - Title bar with primary actions (Refresh, Export, Import, Scan Dependencies)
-  - Search/filter bar with server summary metrics
-  - Left panel: IIS site tree with status indicators
-  - Right panel: Server information dashboard
-  - Status bar with progress indicator
-- **Themes:** Professional styling with resource dictionary (Colors.xaml-style)
-- **Serilog Integration:** Console + rolling file logging
-- **DI Host:** `IHost` with full service registration
-
----
-
-## Completed Phases
-
-### Phase 2 — Export Engine ✅
-- Full export engine with streaming ZIP packaging
-- Custom `.iispackage` format
-- Configuration export (web.config, appsettings.json, .env)
-- Physical file packaging
-- Multi-site and full-server export modes
-- Progress reporting with percentage
-- Cancellation support
-
-### Phase 3 — Import Engine & Validation ✅
-- Package reader with manifest parsing
-- IIS object creation (sites, apps, pools, bindings)
-- Environment compatibility check
-- Conflict detection (names, ports, bindings, app pools)
-- Automatic remediation engine (port changes, conflict strategies)
-- Transaction-scoped rollback for IIS import
-- Idempotent re-import via manifest checksum
-- Post-import state validation
-
-### Phase 4 — Dependency Scanner ✅
-- Runtime detection (.NET, ASP.NET Core, VC++)
-- IIS module detection (URL Rewrite, ARR, FastCGI, WebSocket)
-- Third-party detection (PHP, Node.js, Java, ODBC DSNs)
-- Windows Feature analysis with PowerShell integration
-- Installation suggestions with download URLs
-
-### Phase 5 — Reporting & Security ✅
-- HTML/JSON/PDF report generation
-- Advanced Serilog configuration (Console + rolling file)
-- Package integrity with checksums (SHA-256)
-- Secure credential handling (DPAPI, SecureString)
-- PowerShell execution service (command allowlist, anti-injection)
-- Certificate export/import service (encrypted PFX)
-- Notification sound on export/import completion
-
-### Phase 6 — Advanced Features ✅
-- Conflict resolution strategies (Overwrite, Skip, Clone, Rename, ChangeBinding)
-- Rollback support (TransactionManager with cleanup actions)
-- Transaction-like operations
-- Plugin architecture (IIisDeployPlugin, PluginHost)
-- ExecuteWithRetryAsync for resilient operations
-
-### Phase 7 — Polish & Optimization ✅
-- Dark mode (ThemeService with toggle, full color palette swap)
-- Toast notifications (non-blocking, animated)
-- Detailed log viewer (LogViewerWindow)
-- Report viewer (ReportViewerWindow)
-- Performance optimization (async file ops, cancellation)
-- WiX 7 MSI installer (58 MB)
-- GitHub Actions CI/CD pipeline
-- End-user install guide (`docs/INSTALL.md`)
-- Toolbar & server card icon redesign (DynamicResource theme-aware)
-- Scan button fix (ExecutionPolicy.RemoteSigned)
-- Multi-resolution app icon (7 slots: 16/24/32/48/64/128/256)
-- 68/68 unit tests passing
-
----
-
-## Build, Test, and Release
-
-```bash
-# 1. Build the solution
- dotnet build IISDeployStudio.slnx
-
-# 2. Run the automated tests
- dotnet test tests/IISDeploy.Tests/IISDeploy.Tests.csproj
-
-# 3. Publish the canonical release artifact
- pwsh -File .\scripts\publish-release.ps1
-
-# 4. Direct publish (equivalent command)
- dotnet publish src/UI/IISDeploy.UI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o release
-
-# 5. Run the application locally
- dotnet run --project src/UI
-
-# 6. Build the Windows installer (MSI)
- dotnet build installer/IISDeployStudio.Installer.csproj -c Release
-# → installer/bin/Release/IISDeployStudio-Setup.msi
+┌──────────────────────────────────────────────────────────────┐
+│  IISDeploy.UI           WPF MVVM (ObservableObject, RelayCommand) │
+├──────────────────────────────────────────────────────────────┤
+│  IISDeploy.Infrastructure  IIS, PowerShell, Packaging, Plugins  │
+├──────────────────────────────────────────────────────────────┤
+│  IISDeploy.Application     DTOs, Orchestrators, Use Cases       │
+├──────────────────────────────────────────────────────────────┤
+│  IISDeploy.Core            Domain Models, Interfaces, Enums     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Release standard
-- Canonical output folder: `release/`
-- Single-file self-contained publish
-- Windows x64 runtime target
-- Build + test + publish are the minimum release gates
-- MSI installer produced via WiX 7 (`installer/IISDeployStudio.Installer.csproj`)
-
-**Requirements:**
-- .NET 10 SDK
-- Windows x64 with IIS installed
-- Administrator privileges
-- WiX 7 SDK (auto-restored by `dotnet build` for the installer project)
-
----
-
-## Installation (End Users)
-
-### Option 1: ZIP (Portable)
-1. Download `IISDeployStudio-v1.1.6.zip` from [GitHub Releases](https://github.com/stan0ne/iis-deploy-studio/releases/tag/v1.1.6)
-2. Extract to any folder
-3. Run `IISDeployStudio.exe`
-
-### Option 2: MSI (Installer)
-```cmd
-:: Interactive
-IISDeployStudio-Setup.msi
-
-:: Silent (fleet deployment)
-msiexec /i IISDeployStudio-Setup.msi /qn /l*v install.log
-```
-
-See **[docs/INSTALL.md](docs/INSTALL.md)** for the full installation guide — system requirements, silent deployment flags, upgrade/uninstall, troubleshooting, and enterprise deployment notes.
+- **Core** — pure domain, zero external dependencies
+- **Application** — DTOs, service interfaces, orchestrators (`DashboardService`, `ExportOrchestrator`, `ImportOrchestrator`)
+- **Infrastructure** — IIS integration (`Microsoft.Web.Administration`), PowerShell, packaging, plugins, reporting, security
+- **UI** — WPF with DI via `Microsoft.Extensions.Hosting`, Serilog
 
 ---
 
@@ -221,33 +73,64 @@ See **[docs/INSTALL.md](docs/INSTALL.md)** for the full installation guide — s
 | Layer | Technology |
 |-------|-----------|
 | Runtime | .NET 10 |
-| UI Framework | WPF (.NET) |
-| DI Container | Microsoft.Extensions.Hosting |
+| UI | WPF (MVVM) |
+| DI | Microsoft.Extensions.Hosting |
 | IIS API | Microsoft.Web.Administration |
-| Logging | Serilog (Console + File sinks) |
-| Package Format | ZIP-based `.iispackage` |
-| Data Serialization | System.Text.Json |
-| Build Target | win-x64, Single-file EXE |
+| Logging | Serilog (Console + File) |
+| Package | `.iispackage` (ZIP-based) |
+| Serialization | System.Text.Json |
+| Installer | WiX 7 MSI |
+| Testing | xUnit (68+ tests) |
+
+---
+
+## Installation
+
+**Option 1 — MSI Installer (recommended):**
+```cmd
+IISDeployStudio-Setup.msi
+:: Silent: msiexec /i IISDeployStudio-Setup.msi /qn /l*v install.log
+```
+
+**Option 2 — Portable ZIP:**
+1. Download `IISDeployStudio-v1.1.6.zip` from [Releases](https://github.com/stan0ne/iis-deploy-studio/releases)
+2. Extract and run `IISDeployStudio.exe`
+
+See [docs/INSTALL.md](docs/INSTALL.md) for full details.
+
+---
+
+## Project Structure
+
+```
+IISDeployStudio.slnx
+├── src/Core/           IISDeploy.Core
+├── src/Application/    IISDeploy.Application
+├── src/Infrastructure/ IISDeploy.Infrastructure
+├── src/UI/             IISDeploy.UI
+├── tests/              IISDeploy.Tests
+├── installer/          WiX MSI project
+├── scripts/            publish-release.ps1, validate-release.ps1
+├── docs/               INSTALL.md, RELEASE_SMOKE_TEST.md
+└── release/            Canonical publish output
+```
 
 ---
 
 ## Security
 
 - Administrator privilege enforcement
-- SSL certificate private keys never stored in plain text
-- Encrypted PFX export with password protection
-- App pool credentials: username only, password requested at import
-- No hardcoded paths or credentials
-- Package integrity verification via checksums
-- PowerShell execution with parameter validation (Phase 5 ✅)
+- DPAPI encryption for sensitive data in transit
+- Encrypted PFX export with password
+- App pool passwords never stored — requested at import
+- SHA-256 package integrity verification
+- PowerShell command allowlist with anti-injection
 
 ---
 
 ## License
 
-GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
-
-Free to use, modify, and distribute under GPL-3.0. If you modify and distribute, you must also release your source code under the same license.
+GNU General Public License v3.0 — see [LICENSE](LICENSE).
 
 ---
 

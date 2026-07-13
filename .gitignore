@@ -5,14 +5,35 @@ release/
 dist/
 releases/
 publish/
-logs/
+installer/bin/
+installer/obj/
 
-# Tooling / local artifacts
-.codegraph/
-.commandcode/
-omo/
-omo/
+# Logs
+logs/
 *.log
+
+# IDE / tooling
+.vs/
+.idea/
 *.user
 *.suo
+*.csproj.user
+*.DotSettings.user
+_ReSharper.*/
+.codegraph/
+.commandcode/
+.omo/
+omo/
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+*.nupkg
+packages/
+
+# OS / misc
+Thumbs.db
 *.zip
+@gh-error.PNG
