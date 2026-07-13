@@ -9,6 +9,9 @@
 
 A production-grade Windows desktop application for exporting and importing Microsoft IIS websites and their dependencies between Windows servers — through a modern WPF GUI, with full package-based transfer, dependency scanning, and rollback support.
 
+![Dashboard](scr1-dashboard.png)
+![Import](scr2-import.png)
+
 ---
 
 ## Quick Start
